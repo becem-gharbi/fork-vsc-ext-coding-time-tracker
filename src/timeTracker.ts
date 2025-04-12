@@ -9,12 +9,99 @@ export class TimeTracker implements vscode.Disposable {
     private updateInterval: NodeJS.Timeout | null = null;
     private saveInterval: NodeJS.Timeout | null = null;
     private saveIntervalSeconds: number;
+    private lastCursorActivity: number = Date.now();
+    private cursorInactivityTimeout: NodeJS.Timeout | null = null;
+    private inactivityTimeoutSeconds: number;
 
     constructor(database: Database) {
         this.database = database;
-        this.saveIntervalSeconds = vscode.workspace
-            .getConfiguration('simpleCodingTimeTracker')
-            .get('saveInterval', 5);
+        const config = vscode.workspace.getConfiguration('simpleCodingTimeTracker');
+        this.saveIntervalSeconds = config.get('saveInterval', 5);
+        this.inactivityTimeoutSeconds = config.get('inactivityTimeout', 300); // Default 5 minutes in seconds
+
+        // Track cursor movements
+        vscode.window.onDidChangeTextEditorSelection(() => {
+            this.updateCursorActivity();
+        });
+
+        // Track text changes
+        vscode.workspace.onDidChangeTextDocument(() => {
+            this.updateCursorActivity();
+        });
+
+        // Track active editor changes
+        vscode.window.onDidChangeActiveTextEditor(() => {
+            this.updateCursorActivity();
+        });
+
+        // Track hover events
+        vscode.languages.registerHoverProvider({ scheme: '*' }, {
+            provideHover: () => {
+                this.updateCursorActivity();
+                return null;
+            }
+        });
+
+        // Track type definition requests (triggered by mouse movement over symbols)
+        vscode.languages.registerTypeDefinitionProvider({ scheme: '*' }, {
+            provideTypeDefinition: () => {
+                this.updateCursorActivity();
+                return null;
+            }
+        });
+
+        // Track signature help requests (triggered by hovering over function calls)
+        vscode.languages.registerSignatureHelpProvider({ scheme: '*' }, {
+            provideSignatureHelp: () => {
+                this.updateCursorActivity();
+                return null;
+            }
+        }, '(', ',');
+
+        // Track when VS Code window gains focus
+        vscode.window.onDidChangeWindowState((e) => {
+            if (e.focused) {
+                this.updateCursorActivity();
+            }
+        });
+    }
+
+    private setupCursorTracking() {
+        if (this.cursorInactivityTimeout) {
+            clearTimeout(this.cursorInactivityTimeout);
+        }
+
+        const currentTime = Date.now();
+        const timeSinceLastActivity = currentTime - this.lastCursorActivity;
+
+        // Only setup new timeout if we haven't exceeded the inactivity threshold
+        if (timeSinceLastActivity < this.inactivityTimeoutSeconds * 1000) {
+            // Set up cursor activity tracking
+            this.cursorInactivityTimeout = setTimeout(() => {
+                const now = Date.now();
+                const inactivityDuration = now - this.lastCursorActivity;
+                
+                // Only stop tracking if we've truly been inactive
+                if (this.isTracking && inactivityDuration >= this.inactivityTimeoutSeconds * 1000) {
+                    this.stopTracking();
+                    this.saveCurrentSession();
+                }
+            }, this.inactivityTimeoutSeconds * 1000); // Convert seconds to milliseconds
+        }
+
+        this.lastCursorActivity = currentTime;
+    }
+
+    public updateCursorActivity() {
+        if (!this.isTracking) {
+            this.startTracking();
+        }
+
+        // Update the last activity timestamp
+        this.lastCursorActivity = Date.now();
+
+        // Reset and setup the inactivity timer
+        this.setupCursorTracking();
     }
 
     startTracking() {
@@ -24,6 +111,7 @@ export class TimeTracker implements vscode.Disposable {
             this.currentProject = this.getCurrentProject();
             this.updateInterval = setInterval(() => this.updateCurrentSession(), 1000);
             this.saveInterval = setInterval(() => this.saveCurrentSession(), this.saveIntervalSeconds * 1000); // Convert seconds to milliseconds
+            this.setupCursorTracking();
         }
     }
 
@@ -37,6 +125,10 @@ export class TimeTracker implements vscode.Disposable {
             if (this.saveInterval) {
                 clearInterval(this.saveInterval);
                 this.saveInterval = null;
+            }
+            if (this.cursorInactivityTimeout) {
+                clearTimeout(this.cursorInactivityTimeout);
+                this.cursorInactivityTimeout = null;
             }
             this.saveCurrentSession();
         }
@@ -67,10 +159,14 @@ export class TimeTracker implements vscode.Disposable {
             .filter((entry: TimeEntry) => entry.date === today)
             .reduce((sum: number, entry: TimeEntry) => sum + entry.timeSpent, 0);
         
-        // Add the current session time if tracking is active
+        // Add the current session time if tracking is active and we haven't exceeded inactivity threshold
         if (this.isTracking) {
-            const currentSessionTime = (Date.now() - this.startTime) / 60000;
-            return todayTotal + currentSessionTime;
+            const timeSinceLastActivity = Date.now() - this.lastCursorActivity;
+            // Only include current session if we're still within the activity window
+            if (timeSinceLastActivity < this.inactivityTimeoutSeconds * 1000) {
+                const currentSessionTime = (Date.now() - this.startTime) / 60000;
+                return todayTotal + currentSessionTime;
+            }
         }
         
         return todayTotal;
@@ -84,10 +180,13 @@ export class TimeTracker implements vscode.Disposable {
             .filter((entry: TimeEntry) => entry.date === today && entry.project === currentProject)
             .reduce((sum: number, entry: TimeEntry) => sum + entry.timeSpent, 0);
         
-        // Add the current session time if tracking is active
+        // Add the current session time if tracking is active and within activity window
         if (this.isTracking && this.currentProject === currentProject) {
-            const currentSessionTime = (Date.now() - this.startTime) / 60000;
-            return currentProjectTime + currentSessionTime;
+            const timeSinceLastActivity = Date.now() - this.lastCursorActivity;
+            if (timeSinceLastActivity < this.inactivityTimeoutSeconds * 1000) {
+                const currentSessionTime = (Date.now() - this.startTime) / 60000;
+                return currentProjectTime + currentSessionTime;
+            }
         }
         
         return currentProjectTime;
@@ -109,10 +208,13 @@ export class TimeTracker implements vscode.Disposable {
         const total = this.database.getEntries()
             .reduce((sum: number, entry: TimeEntry) => sum + entry.timeSpent, 0);
 
-        // Add current session if tracking is active
+        // Add current session if tracking is active and within activity window
         if (this.isTracking) {
-            const currentSessionTime = (Date.now() - this.startTime) / 60000;
-            return total + currentSessionTime;
+            const timeSinceLastActivity = Date.now() - this.lastCursorActivity;
+            if (timeSinceLastActivity < this.inactivityTimeoutSeconds * 1000) {
+                const currentSessionTime = (Date.now() - this.startTime) / 60000;
+                return total + currentSessionTime;
+            }
         }
 
         return total;
@@ -129,10 +231,13 @@ export class TimeTracker implements vscode.Disposable {
 
         const total = filteredEntries.reduce((sum, entry) => sum + entry.timeSpent, 0);
 
-        // Add current session if tracking is active
+        // Add current session if tracking is active and within activity window
         if (this.isTracking) {
-            const currentSessionTime = (Date.now() - this.startTime) / 60000;
-            return total + currentSessionTime;
+            const timeSinceLastActivity = Date.now() - this.lastCursorActivity;
+            if (timeSinceLastActivity < this.inactivityTimeoutSeconds * 1000) {
+                const currentSessionTime = (Date.now() - this.startTime) / 60000;
+                return total + currentSessionTime;
+            }
         }
 
         return total;
@@ -158,5 +263,9 @@ export class TimeTracker implements vscode.Disposable {
         this.stopTracking();
         this.startTime = 0;
         this.database.resetAllTime();
+    }
+
+    isActive(): boolean {
+        return this.isTracking;
     }
 }

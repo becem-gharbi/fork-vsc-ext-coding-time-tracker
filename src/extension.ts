@@ -10,6 +10,13 @@ export function activate(context: vscode.ExtensionContext) {
     const statusBar = new StatusBar(timeTracker);
     const summaryView = new SummaryViewProvider(context, database, timeTracker);
 
+    // Register cursor tracking
+    context.subscriptions.push(
+        vscode.window.onDidChangeTextEditorSelection(() => {
+            timeTracker.updateCursorActivity();
+        })
+    );
+
     // Register the existing command
     let disposable = vscode.commands.registerCommand('simpleCodingTimeTracker.showSummary', () => {
         summaryView.show();
