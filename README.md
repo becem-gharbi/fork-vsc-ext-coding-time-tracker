@@ -13,8 +13,9 @@ Simple Coding Time Tracker is a powerful extension for Visual Studio Code that h
 - **Tooltip on Status Bar**: Shows the total coding time weekly, monthly, and all time basis.
 - **Detailed Summaries**: View comprehensive reports of your coding activity. You can search your total time on a particular day or project.
 - **Data Persistence**: Safely stores your time data for long-term analysis.
-- **Configurable Save Interval**: Customize how often your coding time data is saved (default: 5 seconds). Adjust this in VS Code settings to balance between data accuracy and system performance.
-
+- **Configurable Settings**: 
+  - Save Interval: Customize how often your coding time data is saved (default: 5 seconds)
+  - Inactivity Timeout: Set how long to wait before stopping the timer when no activity is detected (default: 5 minutes)
 
 ## Screenshots
 ### Status Bar
@@ -39,7 +40,6 @@ There are total 3 commands in the command palette available for this extension.
 
 ![All Command Palette Commands](./images/commands.png)
 
-
 ## Installation
 
 1. Open Visual Studio Code
@@ -51,37 +51,36 @@ There are total 3 commands in the command palette available for this extension.
 
 Once installed, the extension will automatically start tracking your coding time. You can view your current session time in the status bar at the bottom of the VSCode window.
 
-To access detailed summaries and reports, use the command palette (Ctrl+Shift+P or Cmd+Shift+P on macOS) and search for "Time Tracker" to see available commands.
+To access detailed summaries and reports, use the command palette (Ctrl+Shift+P or Cmd+Shift+P on macOS) and search for "SCTT" to see available commands.
 
-### Configuring Save Interval
-You can customize how often the extension saves your coding time data:
+### Configuration Options
+
+You can customize the extension's behavior through VS Code settings:
+
 1. Open VS Code Settings (Ctrl+, or Cmd+, on macOS)
 2. Search for "Simple Coding Time Tracker"
-3. Find the "Save Interval" setting
-4. Enter your preferred interval in seconds (default is 5 seconds)
-   - Lower values (e.g., 5-10 seconds) provide more frequent updates but may impact performance
-   - Higher values (e.g., 30-60 seconds) are more efficient but update less frequently
+3. Available settings:
+   - **Save Interval**: How often to save your coding time data (in seconds)
+     - Default: 5 seconds
+     - Lower values provide more frequent updates but may impact performance
+     - Higher values are more efficient but update less frequently
+   - **Inactivity Timeout**: How long to wait before stopping the timer when no activity is detected (in minutes)
+     - Default: 5 minutes
+     - Lower values will stop tracking sooner when you're not actively coding
+     - Higher values will continue tracking for longer during breaks
 
-## Control Panel Commands
+### Available Commands
 
-The Simple Coding Time Tracker extension offers a range of commands accessible through the Command Palette, designed to streamline your coding time tracking experience. Here are the primary commands available:
+The extension provides the following commands through the Command Palette:
 
-To access these commands, open the Command Palette (Ctrl+Shift+P or Cmd+Shift+P on macOS).
+- **Show Summary** (`SCTT: Show Coding Time Summary`): 
+  Displays a comprehensive summary of your coding activity, including total time invested in projects and a daily breakdown.
 
-- **Show Summary**: 
-  - Command Title: `SCTT: Show Coding Time Summary`
-  - This command displays a comprehensive summary of your coding activity, including the total time invested in projects and a daily breakdown.
+- **Reset Timer for Today** (`SCTT: Reset Coding Timer for Today`): 
+  Resets the coding time tracker for the current day, allowing you to start anew.
 
-- **Reset Timer for Today**: 
-  - Command Title: `SCTT: Reset Coding Timer for Today`
-  - This command resets the coding time tracker for the current day, allowing you to start anew without any previous data influencing your current session.
-
-- **Reset All Timers**: 
-  - Command Title: `SCTT: Reset All Coding Timers`
-  - This command resets all coding time trackers. It includes a confirmation prompt to prevent unintended resets, ensuring you have full control over your data.
-
-By using these commands, you can effectively manage your coding sessions and maintain precise records of your work.
-
+- **Reset All Timers** (`SCTT: Reset All Coding Timers`): 
+  Resets all coding time trackers with a confirmation prompt to prevent unintended resets.
 
 ## Changelog
 
