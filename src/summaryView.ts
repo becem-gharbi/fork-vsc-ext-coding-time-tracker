@@ -132,8 +132,19 @@ export class SummaryViewProvider implements vscode.WebviewViewProvider {
                         --border-color: var(--vscode-panel-border);
                         --header-background: var(--vscode-titleBar-activeBackground);
                         --header-foreground: var(--vscode-titleBar-activeForeground);
-                        --chart-grid-color: var(--vscode-panel-border);
-                        --chart-text-color: var(--vscode-editor-foreground);
+                        --chart-grid-color: rgba(255, 255, 255, 0.1);
+                        --chart-text-color: rgba(255, 255, 255, 0.9);
+                        --input-background: var(--vscode-input-background);
+                        --input-foreground: var(--vscode-input-foreground);
+                        --input-border: var(--vscode-input-border);
+                        --button-background: var(--vscode-button-background);
+                        --button-foreground: var(--vscode-button-foreground);
+                        --button-hover: var(--vscode-button-hoverBackground);
+                        --cell-background-0: var(--vscode-editor-background);
+                        --cell-background-1: color-mix(in srgb, var(--vscode-charts-blue) 30%, transparent);
+                        --cell-background-2: color-mix(in srgb, var(--vscode-charts-blue) 50%, transparent);
+                        --cell-background-3: color-mix(in srgb, var(--vscode-charts-blue) 70%, transparent);
+                        --cell-background-4: color-mix(in srgb, var(--vscode-charts-blue) 90%, transparent);
                     }
                     body {
                         font-family: var(--vscode-font-family);
@@ -319,11 +330,11 @@ export class SummaryViewProvider implements vscode.WebviewViewProvider {
                     .heatmap-cell:hover {
                         transform: scale(1.1);
                     }
-                    .heatmap-cell[data-level="0"] { background-color: var(--vscode-editor-background); }
-                    .heatmap-cell[data-level="1"] { background-color: #4a72b0; }
-                    .heatmap-cell[data-level="2"] { background-color: #3861a5; }
-                    .heatmap-cell[data-level="3"] { background-color: #254b91; }
-                    .heatmap-cell[data-level="4"] { background-color: #1a3b7c; }
+                    .heatmap-cell[data-level="0"] { background-color: var(--cell-background-0); }
+                    .heatmap-cell[data-level="1"] { background-color: var(--cell-background-1); }
+                    .heatmap-cell[data-level="2"] { background-color: var(--cell-background-2); }
+                    .heatmap-cell[data-level="3"] { background-color: var(--cell-background-3); }
+                    .heatmap-cell[data-level="4"] { background-color: var(--cell-background-4); }
                     .heatmap-legend {
                         display: flex;
                         align-items: center;
@@ -429,6 +440,96 @@ export class SummaryViewProvider implements vscode.WebviewViewProvider {
                 <script>
                     const vscode = acquireVsCodeApi();
                     
+                    // Get theme colors
+                    const isDarkTheme = document.body.classList.contains('vscode-dark');
+                    const style = getComputedStyle(document.documentElement);
+                    
+                    // Theme-aware colors
+                    const chartColors = {
+                        text: isDarkTheme ? 'rgba(255, 255, 255, 0.9)' : 'rgba(0, 0, 0, 0.9)',
+                        background: style.getPropertyValue('--vscode-editor-background'),
+                        grid: isDarkTheme ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
+                        accent: style.getPropertyValue('--vscode-textLink-foreground'),
+                        chartBlues: [
+                            'rgba(64, 159, 255, 0.8)',
+                            'rgba(49, 120, 198, 0.8)',
+                            'rgba(35, 86, 141, 0.8)',
+                            'rgba(28, 69, 113, 0.8)',
+                            'rgba(21, 52, 85, 0.8)'
+                        ]
+                    };
+
+                    // Common chart configuration
+                    const commonChartConfig = {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                grid: {
+                                    color: chartColors.grid,
+                                    borderColor: chartColors.grid,
+                                    lineWidth: 0.5
+                                },
+                                ticks: {
+                                    color: chartColors.text,
+                                    font: {
+                                        size: 12,
+                                        weight: '500'
+                                    },
+                                    padding: 8
+                                },
+                                title: {
+                                    display: true,
+                                    color: chartColors.text
+                                }
+                            },
+                            x: {
+                                grid: {
+                                    color: chartColors.grid,
+                                    borderColor: chartColors.grid,
+                                    lineWidth: 0.5
+                                },
+                                ticks: {
+                                    color: chartColors.text,
+                                    font: {
+                                        size: 12,
+                                        weight: '500'
+                                    },
+                                    padding: 8
+                                },
+                                title: {
+                                    display: true,
+                                    color: chartColors.text
+                                }
+                            }
+                        },
+                        plugins: {
+                            legend: {
+                                display: true,
+                                position: 'top',
+                                labels: {
+                                    color: chartColors.text,
+                                    font: {
+                                        size: 12,
+                                        weight: '600'
+                                    },
+                                    padding: 20,
+                                    usePointStyle: true
+                                }
+                            },
+                            tooltip: {
+                                backgroundColor: isDarkTheme ? 'rgba(0, 0, 0, 0.8)' : 'rgba(255, 255, 255, 0.8)',
+                                titleColor: chartColors.text,
+                                bodyColor: chartColors.text,
+                                borderColor: chartColors.grid,
+                                borderWidth: 1,
+                                padding: 12,
+                                displayColors: false
+                            }
+                        }
+                    };
+
                     window.addEventListener('message', event => {
                         const message = event.data;
                         if (message.command === 'update') {
@@ -482,7 +583,7 @@ export class SummaryViewProvider implements vscode.WebviewViewProvider {
                         const content = document.getElementById('content');
                         content.innerHTML = \`
                             <div class="chart-container">
-                                <div class="chart-title">Project Summary</div>
+                                <div class="chart-title">Project Summary 1</div>
                                 <div class="chart-wrapper">
                                     <canvas id="projectChart"></canvas>
                                 </div>
@@ -495,11 +596,11 @@ export class SummaryViewProvider implements vscode.WebviewViewProvider {
                             </div>
                         \`;
                         
-                        // Create project summary chart
+                        // Project summary chart
                         const projectCtx = document.getElementById('projectChart').getContext('2d');
                         const projectData = Object.entries(data.projectSummary)
                             .sort((a, b) => b[1] - a[1])
-                            .slice(0, 5); // Show top 5 projects
+                            .slice(0, 5);
                         
                         new Chart(projectCtx, {
                             type: 'bar',
@@ -507,97 +608,82 @@ export class SummaryViewProvider implements vscode.WebviewViewProvider {
                                 labels: projectData.map(([project]) => project),
                                 datasets: [{
                                     label: 'Coding Time (hours)',
-                                    data: projectData.map(([_, time]) => time / 60),
-                                    backgroundColor: 'rgba(74, 114, 176, 0.7)',
-                                    borderColor: 'rgba(74, 114, 176, 1)',
+                                    data: projectData.map(([_, time]) => time / 3600),
+                                    backgroundColor: chartColors.chartBlues,
+                                    borderColor: chartColors.grid,
                                     borderWidth: 1
                                 }]
                             },
                             options: {
-                                responsive: true,
-                                maintainAspectRatio: false,
-                                scales: {
-                                    y: {
-                                        beginAtZero: true,
-                                        grid: {
-                                            color: 'var(--chart-grid-color)'
-                                        },
-                                        ticks: {
-                                            color: 'var(--chart-text-color)'
-                                        }
-                                    },
-                                    x: {
-                                        grid: {
-                                            color: 'var(--chart-grid-color)'
-                                        },
-                                        ticks: {
-                                            color: 'var(--chart-text-color)'
-                                        }
-                                    }
-                                },
+                                ...commonChartConfig,
+                                indexAxis: 'y',
                                 plugins: {
-                                    legend: {
-                                        labels: {
-                                            color: 'var(--chart-text-color)'
+                                    ...commonChartConfig.plugins,
+                                    tooltip: {
+                                        ...commonChartConfig.plugins.tooltip,
+                                        callbacks: {
+                                            label: function(context) {
+                                                const hours = context.raw;
+                                                return \`\${Math.floor(hours)}h \${Math.round((hours % 1) * 60)}m\`;
+                                            }
                                         }
                                     }
                                 }
                             }
                         });
 
-                        // Create daily summary chart
+                        // Daily summary chart
                         const dailyCtx = document.getElementById('dailyChart').getContext('2d');
                         const dailyData = Object.entries(data.dailySummary)
-                            .sort((a, b) => b[0].localeCompare(a[0]))
-                            .slice(0, 7);
+                            .sort((a, b) => new Date(a[0]).getTime() - new Date(b[0]).getTime())
+                            .slice(-7);
                         
                         new Chart(dailyCtx, {
                             type: 'line',
                             data: {
-                                labels: dailyData.map(([date]) => date),
+                                labels: dailyData.map(([date]) => {
+                                    const d = new Date(date);
+                                    return d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+                                }),
                                 datasets: [{
                                     label: 'Coding Time (hours)',
-                                    data: dailyData.map(([_, time]) => time / 60),
+                                    data: dailyData.map(([_, time]) => time / 3600),
                                     fill: true,
-                                    backgroundColor: 'rgba(74, 114, 176, 0.2)',
-                                    borderColor: 'rgba(74, 114, 176, 1)',
-                                    tension: 0.4
+                                    backgroundColor: \`\${chartColors.accent}33\`,
+                                    borderColor: chartColors.accent,
+                                    borderWidth: 2,
+                                    tension: 0.4,
+                                    pointBackgroundColor: chartColors.accent,
+                                    pointBorderColor: chartColors.background,
+                                    pointBorderWidth: 2,
+                                    pointRadius: 4,
+                                    pointHoverRadius: 6
                                 }]
                             },
                             options: {
-                                responsive: true,
-                                maintainAspectRatio: false,
+                                ...commonChartConfig,
                                 scales: {
+                                    ...commonChartConfig.scales,
                                     y: {
-                                        beginAtZero: true,
-                                        grid: {
-                                            color: 'var(--chart-grid-color)'
-                                        },
+                                        ...commonChartConfig.scales.y,
                                         ticks: {
-                                            color: 'var(--chart-text-color)'
+                                            ...commonChartConfig.scales.y.ticks,
+                                            callback: function(value) {
+                                                return \`\${value}h\`;
+                                            }
                                         }
                                     },
                                     x: {
-                                        grid: {
-                                            color: 'var(--chart-grid-color)'
-                                        },
+                                        ...commonChartConfig.scales.x,
                                         ticks: {
-                                            color: 'var(--chart-text-color)'
-                                        }
-                                    }
-                                },
-                                plugins: {
-                                    legend: {
-                                        labels: {
-                                            color: 'var(--chart-text-color)'
+                                            ...commonChartConfig.scales.x.ticks,
+                                            maxRotation: 45,
+                                            minRotation: 45
                                         }
                                     }
                                 }
                             }
                         });
-                        
-                        // Add heatmap creation
-                        createHeatmap(data);
                     }
 
                     function displaySearchResult(entries) {
