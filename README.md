@@ -9,27 +9,55 @@ Simple Coding Time Tracker is a powerful extension for Visual Studio Code that h
 
 - **Automatic Time Tracking**: Seamlessly tracks your coding time in the background.
 - **Project-based Tracking**: Organizes time data by project for easy analysis.
+- **Smart Activity Detection**: Automatically pauses tracking during periods of inactivity.
 - **Status Bar Display**: Shows your today's total coding time duration in real-time.
-- **Tooltip on Status Bar**: Shows the total coding time weekly, monthly, and all time basis.
-- **Detailed Summaries**: View comprehensive reports of your coding activity. You can search your total time on a particular day or project.
+- **Tooltip on Status Bar**: Shows the total coding time weekly, monthly and all time basis.
+- **Interactive Data Visualization**:
+  - Project Summary Chart: Visual breakdown of time spent on each project
+  - Daily Activity Timeline: Interactive line chart showing your coding patterns
+  - Activity Heatmap: 3-month calendar view showing coding intensity
+  - Theme-Aware Charts: Automatically adapts to VS Code's light/dark themes
+- **Advanced Search & Filtering**:
+  - Date Range Selection: Filter data by specific time periods
+  - Project Filtering: Focus on specific projects
+  - Quick Reset: One-click reset for search filters
 - **Data Persistence**: Safely stores your time data for long-term analysis.
 - **Configurable Settings**: 
   - Save Interval: Customize how often your coding time data is saved (default: 5 seconds)
   - Inactivity Timeout: Set how long to wait before stopping the timer when no activity is detected (default: 5 minutes)
 
 ## Screenshots
-### Status Bar
+### Coding time summary
+The summary page provides a detailed report of your coding activity with interactive charts and visualizations:
+- Project distribution chart showing time allocation across projects
+- Daily activity timeline with interactive tooltips
+- 3-month activity heatmap for long-term pattern analysis
+- Theme-aware visualizations that adapt to your VS Code theme
+- Advanced search and filtering capabilities
+
+![Coding Summary ](./images/coding_summary.png)
+
+#### Dark theme
+![Coding Summary Dark Theme](./images/summry_blck.png)
+
+#### Filtering options
+![Filter](./images/filter_summry.png)
+
+#### Status Bar
 Status bar resets to zero at midnight each day and hence shows the coding time for the current day.
 ![Status Bar](./images/statusbar.png)
 
-### Tooltip
+#### Tooltip
 Tooltip shows the total coding time weekly, monthly and all time basis.
 ![Tooltip](./images/tooltip.png)
 
-### Summary page
-The summary page provides a detailed report of your coding activity. You can search your total time on a particular day or project.
+#### Automatic Pause/Resume
+When the user is inactive for a period of time, the timer automatically pauses and resumes when the user starts typing again coding again.
+![Pause/Resume icon](./images/paused_time.png)
 
-![Summary page ](https://raw.githubusercontent.com/twentyTwo/static-file-hosting/main/vsc-ext-coding-time-tracker-files/Simple-Coding-Time-Tracker.gif)
+It is configurable from the settings. Default value is 5 minutes.
+![Settings](./images/settings.png)
+
 
 ### All Command Palette Commands
 There are total 3 commands in the command palette available for this extension.
@@ -51,7 +79,23 @@ There are total 3 commands in the command palette available for this extension.
 
 Once installed, the extension will automatically start tracking your coding time. You can view your current session time in the status bar at the bottom of the VSCode window.
 
-To access detailed summaries and reports, use the command palette (Ctrl+Shift+P or Cmd+Shift+P on macOS) and search for "SCTT" to see available commands.
+## Feature Details
+
+1. Open the Command Palette (Ctrl+Shift+P or Cmd+Shift+P on macOS)
+2. Search for "SCTT: Show Coding Time Summary"
+3. Explore your coding statistics through interactive visualizations:
+   - View project distribution in the Project Summary chart
+   - Track daily patterns in the Activity Timeline
+   - Analyze long-term trends in the Activity Heatmap
+   - All charts automatically adapt to your VS Code theme
+
+### Using Search & Filters
+
+1. In the summary view, locate the search form
+2. Select a date range using the date pickers
+3. Optionally choose a specific project from the dropdown
+4. Click "Search" to apply filters
+5. Use "Reset" to clear all filters and refresh the view
 
 ### Configuration Options
 
@@ -74,7 +118,7 @@ You can customize the extension's behavior through VS Code settings:
 The extension provides the following commands through the Command Palette:
 
 - **Show Summary** (`SCTT: Show Coding Time Summary`): 
-  Displays a comprehensive summary of your coding activity, including total time invested in projects and a daily breakdown.
+  Displays a comprehensive summary of your coding activity with interactive charts and visualizations.
 
 - **Reset Timer for Today** (`SCTT: Reset Coding Timer for Today`): 
   Resets the coding time tracker for the current day, allowing you to start anew.
@@ -83,6 +127,13 @@ The extension provides the following commands through the Command Palette:
   Resets all coding time trackers with a confirmation prompt to prevent unintended resets.
 
 ## Changelog
+
+### [0.2.4] - 2025-04-13
+- Added smart activity detection with configurable inactivity timeout
+- Enhanced chart interactivity and responsiveness
+- Improved theme compatibility for all visualizations
+- Added quick reset button for search filters
+- Refined chart tooltips and legends for better readability
 
 ### [0.2.3] - 2025-03-19
 - Made the save interval configurable by the user, with a default of 5 seconds.
