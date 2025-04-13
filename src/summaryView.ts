@@ -734,13 +734,18 @@ export class SummaryViewProvider implements vscode.WebviewViewProvider {
                                 datasets: [{
                                     data: searchChartData.map(([_, time]) => time / 60),
                                     backgroundColor: [
-                                        'rgba(74, 114, 176, 0.7)',
-                                        'rgba(56, 97, 165, 0.7)',
-                                        'rgba(37, 75, 145, 0.7)',
-                                        'rgba(26, 59, 124, 0.7)',
-                                        'rgba(15, 43, 103, 0.7)'
+                                        'rgba(255, 99, 132, 0.7)',    // Red
+                                        'rgba(54, 162, 235, 0.7)',   // Blue
+                                        'rgba(255, 206, 86, 0.7)',   // Yellow
+                                        'rgba(75, 192, 192, 0.7)',   // Teal
+                                        'rgba(153, 102, 255, 0.7)',  // Purple
+                                        'rgba(255, 159, 64, 0.7)',   // Orange
+                                        'rgba(199, 199, 199, 0.7)',  // Gray
+                                        'rgba(83, 102, 255, 0.7)',   // Indigo
+                                        'rgba(40, 167, 69, 0.7)',    // Green
+                                        'rgba(220, 53, 69, 0.7)'     // Dark Red
                                     ],
-                                    borderColor: 'var(--vscode-editor-background)',
+                                    borderColor: chartColors.background,
                                     borderWidth: 1
                                 }]
                             },
@@ -751,7 +756,29 @@ export class SummaryViewProvider implements vscode.WebviewViewProvider {
                                     legend: {
                                         position: 'right',
                                         labels: {
-                                            color: 'var(--chart-text-color)'
+                                            color: chartColors.text,
+                                            font: {
+                                                size: 12,
+                                                weight: '500'
+                                            },
+                                            padding: 20,
+                                            usePointStyle: true
+                                        }
+                                    },
+                                    tooltip: {
+                                        backgroundColor: isDarkTheme ? 'rgba(0, 0, 0, 0.8)' : 'rgba(255, 255, 255, 0.8)',
+                                        titleColor: chartColors.text,
+                                        bodyColor: chartColors.text,
+                                        borderColor: chartColors.grid,
+                                        borderWidth: 1,
+                                        padding: 12,
+                                        callbacks: {
+                                            label: function(context) {
+                                                const minutes = context.raw;
+                                                const hours = Math.floor(minutes / 60);
+                                                const mins = Math.round(minutes % 60);
+                                                return \`\${context.label}: \${hours}h \${mins}m\`;
+                                            }
                                         }
                                     }
                                 }
