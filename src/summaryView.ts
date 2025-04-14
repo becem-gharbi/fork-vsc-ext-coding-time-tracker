@@ -130,7 +130,7 @@ export class SummaryViewProvider implements vscode.WebviewViewProvider {
                         --background-color: var(--vscode-editor-background);
                         --text-color: var(--vscode-editor-foreground);
                         --border-color: var(--vscode-panel-border);
-                        --header-background: var(--vscode-titleBar-activeBackground);
+                        --header-background: var(--vscode-editor-background);
                         --header-foreground: var(--vscode-titleBar-activeForeground);
                         --chart-grid-color: rgba(255, 255, 255, 0.1);
                         --chart-text-color: rgba(255, 255, 255, 0.9);
@@ -230,7 +230,7 @@ export class SummaryViewProvider implements vscode.WebviewViewProvider {
                     }
                     .header {
                         display: flex;
-                        justify-content: space-between;
+                        justify-content: center;
                         align-items: center;
                         background-color: var(--header-background);
                         padding: 10px;
@@ -238,6 +238,7 @@ export class SummaryViewProvider implements vscode.WebviewViewProvider {
                     .header h1 {
                         margin: 0;
                         padding: 0;
+                        text-align: center;
                         background-color: transparent;
                     }
                     .reload-button {
