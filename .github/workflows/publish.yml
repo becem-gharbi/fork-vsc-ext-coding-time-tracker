@@ -1,4 +1,4 @@
-name: Publish Extension
+name: Publish Extension to Visual Studio Marketplace
 
 on:
   push:
@@ -32,5 +32,19 @@ jobs:
       - name: Package Extension
         run: vsce package
         
+      - name: Get Package Info
+        id: package
+        run: |
+          VSIX_PATH=$(ls *.vsix)
+          echo "Package created: $VSIX_PATH"
+          echo "vsix_path=$VSIX_PATH" >> $GITHUB_OUTPUT
+          
+      - name: Upload VSIX as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: extension-release
+          path: "*.vsix"
+          retention-days: 400  # Maximum retention period allowed by GitHub
+          
       - name: Publish to Visual Studio Marketplace
         run: vsce publish -p "${{ secrets.VSC_PAT }}" 

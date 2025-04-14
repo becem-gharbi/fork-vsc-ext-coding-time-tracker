@@ -1,0 +1,64 @@
+name: Build Extension Package
+
+on:
+  push:
+    branches:
+      - extension_test
+  pull_request:
+    branches:
+      - extension_test
+  workflow_dispatch:  # Allow manual trigger
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          
+      - name: Install dependencies
+        run: npm ci
+        
+      - name: Compile
+        run: npm run compile
+        
+      - name: Install vsce
+        run: npm install -g @vscode/vsce
+        
+      - name: Package Extension
+        run: vsce package
+        
+      - name: Upload VSIX as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: extension
+          path: "*.vsix"
+          retention-days: 5
+          
+      - name: Get Package Info
+        id: package
+        run: |
+          VSIX_PATH=$(ls *.vsix)
+          echo "Package created: $VSIX_PATH"
+          echo "vsix_path=$VSIX_PATH" >> $GITHUB_OUTPUT
+          
+      - name: Add Comment to PR
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const vsixPath = '${{ steps.package.outputs.vsix_path }}';
+            const message = `✨ Extension package built successfully!\nArtifact: \`${vsixPath}\`\n\nYou can download the VSIX package from the Actions tab.`;
+            
+            github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: message
+            }); 
