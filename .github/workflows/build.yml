@@ -6,11 +6,6 @@ on:
       - extension_test
     paths-ignore:
       - '.github/workflows/**'  # Ignore changes to workflow files
-  pull_request:
-    branches:
-      - extension_test
-    paths-ignore:
-      - '.github/workflows/**'  # Ignore changes to workflow files
   workflow_dispatch:  # Allow manual trigger
 
 jobs:
@@ -43,26 +38,11 @@ jobs:
         with:
           name: extension
           path: "*.vsix"
-          retention-days: 5
+          retention-days: 5  
           
       - name: Get Package Info
         id: package
         run: |
           VSIX_PATH=$(ls *.vsix)
           echo "Package created: $VSIX_PATH"
-          echo "vsix_path=$VSIX_PATH" >> $GITHUB_OUTPUT
-          
-      - name: Add Comment to PR
-        if: github.event_name == 'pull_request'
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const vsixPath = '${{ steps.package.outputs.vsix_path }}';
-            const message = `✨ Extension package built successfully!\nArtifact: \`${vsixPath}\`\n\nYou can download the VSIX package from the Actions tab.`;
-            
-            github.rest.issues.createComment({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: context.issue.number,
-              body: message
-            }); 
+          echo "vsix_path=$VSIX_PATH" >> $GITHUB_OUTPUT 
