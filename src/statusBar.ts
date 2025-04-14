@@ -20,8 +20,9 @@ export class StatusBar implements vscode.Disposable {
 
     private updateStatusBar() {
         const todayTotal = this.timeTracker.getTodayTotal();
-        this.statusBarItem.text = `💻 ${this.formatTime(todayTotal)}`;
-        this.statusBarItem.tooltip = this.getTooltipText();
+        const isActive = this.timeTracker.isActive();
+        this.statusBarItem.text = `${isActive ? '💻' : '⏸️'} ${this.formatTime(todayTotal)}`;
+        this.statusBarItem.tooltip = this.getTooltipText(isActive);
     }
 
     private formatTime(minutes: number): string {
@@ -31,12 +32,12 @@ export class StatusBar implements vscode.Disposable {
         return `${hours.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
     }
 
-    private getTooltipText(): string {
+    private getTooltipText(isActive: boolean): string {
         const weeklyTotal = this.timeTracker.getWeeklyTotal();
         const monthlyTotal = this.timeTracker.getMonthlyTotal();
         const allTimeTotal = this.timeTracker.getAllTimeTotal();
 
-        return `Total Coding Time:
+        return `${isActive ? 'Active' : 'Paused'} - Total Coding Time:
 This week: ${formatTime(weeklyTotal)}
 This month: ${formatTime(monthlyTotal)}
 All Time: ${formatTime(allTimeTotal)}

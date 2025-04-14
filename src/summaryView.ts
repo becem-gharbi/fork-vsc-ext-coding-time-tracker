@@ -124,13 +124,27 @@ export class SummaryViewProvider implements vscode.WebviewViewProvider {
                 <meta charset="UTF-8">
                 <meta name="viewport" content="width=device-width, initial-scale=1.0">
                 <title>Coding Time Summary</title>
+                <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
                 <style>
                     :root {
                         --background-color: var(--vscode-editor-background);
                         --text-color: var(--vscode-editor-foreground);
                         --border-color: var(--vscode-panel-border);
-                        --header-background: var(--vscode-titleBar-activeBackground);
+                        --header-background: var(--vscode-editor-background);
                         --header-foreground: var(--vscode-titleBar-activeForeground);
+                        --chart-grid-color: rgba(255, 255, 255, 0.1);
+                        --chart-text-color: rgba(255, 255, 255, 0.9);
+                        --input-background: var(--vscode-input-background);
+                        --input-foreground: var(--vscode-input-foreground);
+                        --input-border: var(--vscode-input-border);
+                        --button-background: var(--vscode-button-background);
+                        --button-foreground: var(--vscode-button-foreground);
+                        --button-hover: var(--vscode-button-hoverBackground);
+                        --cell-background-0: var(--vscode-editor-background);
+                        --cell-background-1: color-mix(in srgb, var(--vscode-charts-blue) 30%, transparent);
+                        --cell-background-2: color-mix(in srgb, var(--vscode-charts-blue) 50%, transparent);
+                        --cell-background-3: color-mix(in srgb, var(--vscode-charts-blue) 70%, transparent);
+                        --cell-background-4: color-mix(in srgb, var(--vscode-charts-blue) 90%, transparent);
                     }
                     body {
                         font-family: var(--vscode-font-family);
@@ -207,9 +221,16 @@ export class SummaryViewProvider implements vscode.WebviewViewProvider {
                     .search-form button:hover {
                         background-color: var(--vscode-button-hoverBackground);
                     }
+                    .reset-button {
+                        background-color: var(--vscode-button-secondaryBackground) !important;
+                        color: var(--vscode-button-secondaryForeground) !important;
+                    }
+                    .reset-button:hover {
+                        background-color: var(--vscode-button-secondaryHoverBackground) !important;
+                    }
                     .header {
                         display: flex;
-                        justify-content: space-between;
+                        justify-content: center;
                         align-items: center;
                         background-color: var(--header-background);
                         padding: 10px;
@@ -217,6 +238,7 @@ export class SummaryViewProvider implements vscode.WebviewViewProvider {
                     .header h1 {
                         margin: 0;
                         padding: 0;
+                        text-align: center;
                         background-color: transparent;
                     }
                     .reload-button {
@@ -258,12 +280,106 @@ export class SummaryViewProvider implements vscode.WebviewViewProvider {
                         margin: 10px 0 0;
                         color: var(--vscode-textLink-foreground);
                     }
+                    .heatmap-container {
+                        margin: 30px 0;
+                        overflow-x: auto;
+                        background: var(--vscode-editor-background);
+                        border: 1px solid var(--vscode-panel-border);
+                        border-radius: 6px;
+                        padding: 20px;
+                    }
+                    .heatmap-wrapper {
+                        display: flex;
+                        flex-direction: column;
+                        width: fit-content;
+                        margin: 0 auto;
+                    }
+                    .months-container {
+                        display: flex;
+                        gap: 30px;
+                    }
+                    .month-grid {
+                        display: flex;
+                        flex-direction: column;
+                        gap: 15px;
+                    }
+                    .month-header {
+                        text-align: center;
+                        font-size: 14px;
+                        color: var(--vscode-foreground);
+                        font-weight: 500;
+                    }
+                    .heatmap-grid {
+                        display: grid;
+                        grid-template-columns: repeat(7, 15px);
+                        grid-auto-rows: 15px;
+                        gap: 4px;
+                    }
+                    .day-labels {
+                        display: grid;
+                        grid-template-columns: repeat(7, 15px);
+                        gap: 4px;
+                        margin-top: 4px;
+                        font-size: 10px;
+                        color: var(--vscode-foreground);
+                        opacity: 0.8;
+                    }
+                    .day-label {
+                        text-align: center;
+                    }
+                    .heatmap-cell {
+                        width: 15px;
+                        height: 15px;
+                        border-radius: 3px;
+                        background-color: var(--vscode-editor-background);
+                        border: 1px solid var(--vscode-panel-border);
+                        transition: all 0.2s ease;
+                    }
+                    .heatmap-cell:hover {
+                        transform: scale(1.1);
+                    }
+                    .heatmap-cell[data-level="0"] { background-color: var(--cell-background-0); }
+                    .heatmap-cell[data-level="1"] { background-color: var(--cell-background-1); }
+                    .heatmap-cell[data-level="2"] { background-color: var(--cell-background-2); }
+                    .heatmap-cell[data-level="3"] { background-color: var(--cell-background-3); }
+                    .heatmap-cell[data-level="4"] { background-color: var(--cell-background-4); }
+                    .heatmap-legend {
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        gap: 5px;
+                        margin-top: 15px;
+                        padding-top: 15px;
+                        border-top: 1px solid var(--vscode-panel-border);
+                        font-size: 11px;
+                        color: var(--vscode-foreground);
+                    }
+                    .chart-container {
+                        background: var(--vscode-editor-background);
+                        border: 1px solid var(--vscode-panel-border);
+                        border-radius: 6px;
+                        padding: 20px;
+                        margin-bottom: 30px;
+                    }
+                    .chart-title {
+                        font-size: 16px;
+                        font-weight: 500;
+                        color: var(--vscode-foreground);
+                        margin-bottom: 15px;
+                    }
+                    .chart-wrapper {
+                        position: relative;
+                        height: 300px;
+                        width: 100%;
+                    }
+                    .search-results-chart {
+                        height: 400px;
+                    }
                 </style>
             </head>
             <body>
                 <div class="header">
                     <h1>Coding Time Summary</h1>
-                    <button class="reload-button" id="reload-button">Reload</button>
                 </div>
                 <div class="container">
                     <h2>Total Coding Time</h2>
@@ -292,6 +408,12 @@ export class SummaryViewProvider implements vscode.WebviewViewProvider {
                             <p id="all-time-total">Loading...</p>
                         </div>
                     </div>
+                    <h2>Coding Activity</h2>
+                    <div class="heatmap-container">
+                        <div class="heatmap-wrapper">
+                            <div class="months-container"></div>
+                        </div>
+                    </div>
                     <div class="search-form">
                         <input type="date" id="start-date-search" name="start-date-search">
                         <input type="date" id="end-date-search" name="end-date-search">
@@ -300,12 +422,122 @@ export class SummaryViewProvider implements vscode.WebviewViewProvider {
                             ${projectOptions}
                         </select>
                         <button id="search-button">Search</button>
+                        <button id="reload-button" class="reset-button">Reset</button>
                     </div>
-                    <div id="content">Loading...</div>
+                    <div id="content">
+                        <div class="chart-container">
+                            <div class="chart-title">Project Summary</div>
+                            <div class="chart-wrapper">
+                                <canvas id="projectChart"></canvas>
+                            </div>
+                        </div>
+                        <div class="chart-container">
+                            <div class="chart-title">Daily Summary (Last 7 Days)</div>
+                            <div class="chart-wrapper">
+                                <canvas id="dailyChart"></canvas>
+                            </div>
+                        </div>
+                        <div class="chart-container search-results-chart" style="display: none;">
+                            <div class="chart-title">Search Results</div>
+                            <div class="chart-wrapper">
+                                <canvas id="searchChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
                 </div>
                 <script>
                     const vscode = acquireVsCodeApi();
                     
+                    // Get theme colors
+                    const isDarkTheme = document.body.classList.contains('vscode-dark');
+                    const style = getComputedStyle(document.documentElement);
+                    
+                    // Theme-aware colors
+                    const chartColors = {
+                        text: isDarkTheme ? 'rgba(255, 255, 255, 0.9)' : 'rgba(0, 0, 0, 0.9)',
+                        background: style.getPropertyValue('--vscode-editor-background'),
+                        grid: isDarkTheme ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
+                        accent: style.getPropertyValue('--vscode-textLink-foreground'),
+                        chartBlues: [
+                            'rgba(64, 159, 255, 0.8)',
+                            'rgba(49, 120, 198, 0.8)',
+                            'rgba(35, 86, 141, 0.8)',
+                            'rgba(28, 69, 113, 0.8)',
+                            'rgba(21, 52, 85, 0.8)'
+                        ]
+                    };
+
+                    // Common chart configuration
+                    const commonChartConfig = {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                grid: {
+                                    color: chartColors.grid,
+                                    borderColor: chartColors.grid,
+                                    lineWidth: 0.5
+                                },
+                                ticks: {
+                                    color: chartColors.text,
+                                    font: {
+                                        size: 12,
+                                        weight: '500'
+                                    },
+                                    padding: 8
+                                },
+                                title: {
+                                    display: true,
+                                    color: chartColors.text
+                                }
+                            },
+                            x: {
+                                grid: {
+                                    color: chartColors.grid,
+                                    borderColor: chartColors.grid,
+                                    lineWidth: 0.5
+                                },
+                                ticks: {
+                                    color: chartColors.text,
+                                    font: {
+                                        size: 12,
+                                        weight: '500'
+                                    },
+                                    padding: 8
+                                },
+                                title: {
+                                    display: true,
+                                    color: chartColors.text
+                                }
+                            }
+                        },
+                        plugins: {
+                            legend: {
+                                display: true,
+                                position: 'top',
+                                labels: {
+                                    color: chartColors.text,
+                                    font: {
+                                        size: 12,
+                                        weight: '600'
+                                    },
+                                    padding: 20,
+                                    usePointStyle: true
+                                }
+                            },
+                            tooltip: {
+                                backgroundColor: isDarkTheme ? 'rgba(0, 0, 0, 0.8)' : 'rgba(255, 255, 255, 0.8)',
+                                titleColor: chartColors.text,
+                                bodyColor: chartColors.text,
+                                borderColor: chartColors.grid,
+                                borderWidth: 1,
+                                padding: 12,
+                                displayColors: false
+                            }
+                        }
+                    };
+
                     window.addEventListener('message', event => {
                         const message = event.data;
                         if (message.command === 'update') {
@@ -358,24 +590,111 @@ export class SummaryViewProvider implements vscode.WebviewViewProvider {
                     function updateContent(data) {
                         const content = document.getElementById('content');
                         content.innerHTML = \`
-                            <h2>Project Summary</h2>
-                            <table>
-                                <tr><th>Project</th><th>Coding Time</th></tr>
-                                \${Object.entries(data.projectSummary)
-                                    .map(([project, time]) => \`<tr><td>\${project}</td><td>\${formatTime(time)}</td></tr>\`)
-                                    .join('')}
-                            </table>
-
-                            <h2>Daily Summary (Last 7 Days)</h2>
-                            <table>
-                                <tr><th>Date</th><th>Coding Time</th></tr>
-                                \${Object.entries(data.dailySummary)
-                                    .sort((a, b) => b[0].localeCompare(a[0]))
-                                    .slice(0, 7)
-                                    .map(([date, time]) => \`<tr><td>\${date}</td><td>\${formatTime(time)}</td></tr>\`)
-                                    .join('')}
-                            </table>
+                            <div class="chart-container">
+                                <div class="chart-title">Project Summary (Top 5)</div>
+                                <div class="chart-wrapper">
+                                    <canvas id="projectChart"></canvas>
+                                </div>
+                            </div>
+                            <div class="chart-container">
+                                <div class="chart-title">Daily Summary (Last 7 Days)</div>
+                                <div class="chart-wrapper">
+                                    <canvas id="dailyChart"></canvas>
+                                </div>
+                            </div>
                         \`;
+                        
+                        // Create heatmap
+                        createHeatmap(data);
+                        
+                        // Project summary chart
+                        const projectCtx = document.getElementById('projectChart').getContext('2d');
+                        const projectData = Object.entries(data.projectSummary)
+                            .sort((a, b) => b[1] - a[1])
+                            .slice(0, 5);
+                        
+                        new Chart(projectCtx, {
+                            type: 'bar',
+                            data: {
+                                labels: projectData.map(([project]) => project),
+                                datasets: [{
+                                    label: 'Coding Time (hours)',
+                                    data: projectData.map(([_, time]) => time / 3600),
+                                    backgroundColor: chartColors.chartBlues,
+                                    borderColor: chartColors.grid,
+                                    borderWidth: 1
+                                }]
+                            },
+                            options: {
+                                ...commonChartConfig,
+                                indexAxis: 'y',
+                                plugins: {
+                                    ...commonChartConfig.plugins,
+                                    tooltip: {
+                                        ...commonChartConfig.plugins.tooltip,
+                                        callbacks: {
+                                            label: function(context) {
+                                                const hours = context.raw;
+                                                return \`\${Math.floor(hours)}h \${Math.round((hours % 1) * 60)}m\`;
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        });
+
+                        // Daily summary chart
+                        const dailyCtx = document.getElementById('dailyChart').getContext('2d');
+                        const dailyData = Object.entries(data.dailySummary)
+                            .sort((a, b) => new Date(a[0]).getTime() - new Date(b[0]).getTime())
+                            .slice(-7);
+                        
+                        new Chart(dailyCtx, {
+                            type: 'line',
+                            data: {
+                                labels: dailyData.map(([date]) => {
+                                    const d = new Date(date);
+                                    return d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+                                }),
+                                datasets: [{
+                                    label: 'Coding Time (hours)',
+                                    data: dailyData.map(([_, time]) => time / 3600),
+                                    fill: true,
+                                    backgroundColor: \`\${chartColors.accent}33\`,
+                                    borderColor: chartColors.accent,
+                                    borderWidth: 2,
+                                    tension: 0.4,
+                                    pointBackgroundColor: chartColors.accent,
+                                    pointBorderColor: chartColors.background,
+                                    pointBorderWidth: 2,
+                                    pointRadius: 4,
+                                    pointHoverRadius: 6
+                                }]
+                            },
+                            options: {
+                                ...commonChartConfig,
+                                scales: {
+                                    ...commonChartConfig.scales,
+                                    y: {
+                                        ...commonChartConfig.scales.y,
+                                        ticks: {
+                                            ...commonChartConfig.scales.y.ticks,
+                                            callback: function(value) {
+                                                return \`\${value}h\`;
+                                            }
+                                        }
+                                    },
+                                    x: {
+                                        ...commonChartConfig.scales.x,
+                                        ticks: {
+                                            ...commonChartConfig.scales.x.ticks,
+                                            maxRotation: 45,
+                                            minRotation: 45
+                                        }
+                                    }
+                                }
+                            }
+                        });
                     }
 
                     function displaySearchResult(entries) {
@@ -386,24 +705,237 @@ export class SummaryViewProvider implements vscode.WebviewViewProvider {
                         }
 
                         let totalTime = 0;
-                        const tableRows = entries.map(entry => {
+                        const searchData = entries.reduce((acc, entry) => {
                             totalTime += entry.timeSpent;
-                            return \`<tr><td>\${entry.date}</td><td>\${entry.project}</td><td>\${formatTime(entry.timeSpent)}</td></tr>\`;
-                        }).join('');
+                            if (!acc[entry.project]) {
+                                acc[entry.project] = 0;
+                            }
+                            acc[entry.project] += entry.timeSpent;
+                            return acc;
+                        }, {});
 
                         content.innerHTML = \`
-                            <h2>Search Results: (Coding Time is \${formatTime(totalTime)})</h2>
-                            <table>
-                                <tr><th>Date</th><th>Project</th><th>Coding Time</th></tr>
-                                \${tableRows}
-                            </table>
+                            <div class="chart-container search-results-chart">
+                                <div class="chart-title">Search Results (Total Time: \${formatTime(totalTime)})</div>
+                                <div class="chart-wrapper">
+                                    <canvas id="searchChart"></canvas>
+                                </div>
+                            </div>
                         \`;
+
+                        // Create search results chart
+                        const searchCtx = document.getElementById('searchChart').getContext('2d');
+                        const searchChartData = Object.entries(searchData)
+                            .sort((a, b) => b[1] - a[1]);
+                        
+                        new Chart(searchCtx, {
+                            type: 'pie',
+                            data: {
+                                labels: searchChartData.map(([project]) => project),
+                                datasets: [{
+                                    data: searchChartData.map(([_, time]) => time / 60),
+                                    backgroundColor: [
+                                        'rgba(255, 99, 132, 0.7)',    // Red
+                                        'rgba(54, 162, 235, 0.7)',   // Blue
+                                        'rgba(255, 206, 86, 0.7)',   // Yellow
+                                        'rgba(75, 192, 192, 0.7)',   // Teal
+                                        'rgba(153, 102, 255, 0.7)',  // Purple
+                                        'rgba(255, 159, 64, 0.7)',   // Orange
+                                        'rgba(199, 199, 199, 0.7)',  // Gray
+                                        'rgba(83, 102, 255, 0.7)',   // Indigo
+                                        'rgba(40, 167, 69, 0.7)',    // Green
+                                        'rgba(220, 53, 69, 0.7)'     // Dark Red
+                                    ],
+                                    borderColor: chartColors.background,
+                                    borderWidth: 1
+                                }]
+                            },
+                            options: {
+                                responsive: true,
+                                maintainAspectRatio: false,
+                                plugins: {
+                                    legend: {
+                                        position: 'right',
+                                        labels: {
+                                            color: chartColors.text,
+                                            font: {
+                                                size: 12,
+                                                weight: '500'
+                                            },
+                                            padding: 20,
+                                            usePointStyle: true
+                                        }
+                                    },
+                                    tooltip: {
+                                        backgroundColor: isDarkTheme ? 'rgba(0, 0, 0, 0.8)' : 'rgba(255, 255, 255, 0.8)',
+                                        titleColor: chartColors.text,
+                                        bodyColor: chartColors.text,
+                                        borderColor: chartColors.grid,
+                                        borderWidth: 1,
+                                        padding: 12,
+                                        callbacks: {
+                                            label: function(context) {
+                                                const minutes = context.raw;
+                                                const hours = Math.floor(minutes / 60);
+                                                const mins = Math.round(minutes % 60);
+                                                return \`\${context.label}: \${hours}h \${mins}m\`;
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        });
                     }
 
                     function formatTime(minutes) {
                         const hours = Math.floor(minutes / 60);
                         const mins = Math.round(minutes % 60);
                         return \`\${hours}h \${mins}m\`;
+                    }
+
+                    function createMonthGrid(data, date) {
+                        const monthName = new Intl.DateTimeFormat('en-US', { month: 'long' }).format(date);
+                        const firstDay = new Date(date.getFullYear(), date.getMonth(), 1);
+                        const lastDay = new Date(date.getFullYear(), date.getMonth() + 1, 0);
+                        
+                        const monthGrid = document.createElement('div');
+                        monthGrid.className = 'month-grid';
+                        
+                        // Add month header
+                        const header = document.createElement('div');
+                        header.className = 'month-header';
+                        header.textContent = \`\${monthName} \${date.getFullYear()}\`;
+                        monthGrid.appendChild(header);
+                        
+                        // Create the grid
+                        const grid = document.createElement('div');
+                        grid.className = 'heatmap-grid';
+                        
+                        // Get the day of week (0 = Sunday, ..., 6 = Saturday)
+                        const firstDayOfWeek = firstDay.getDay();
+                        
+                        // Create empty cells for padding before the first day
+                        for (let i = 0; i < firstDayOfWeek; i++) {
+                            const cell = document.createElement('div');
+                            cell.className = 'heatmap-cell empty-cell';
+                            cell.style.opacity = '0';
+                            grid.appendChild(cell);
+                        }
+                        
+                        // Create cells for each day of the month
+                        let previousCell = null; // Add this line to store previous cell reference
+                        for (let day = 1; day <= lastDay.getDate(); day++) {
+                            const currentDate = new Date(date.getFullYear(), date.getMonth(), day);
+                            const cell = document.createElement('div');
+                            cell.className = 'heatmap-cell';
+                            
+                            const dateStr = currentDate.toISOString().split('T')[0];
+                            const minutes = data.dailySummary[dateStr] || 0;
+                            const level = getIntensityLevel(minutes);
+                            
+                            // Get the day name (Sunday first)
+                            const dayOfWeek = currentDate.getDay();
+                            const dayNames = [ 'Saturday', 'Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
+                            
+                            // Create detailed tooltip content
+                            const hours = Math.floor(minutes / 60);
+                            const mins = Math.round(minutes % 60);
+                            let intensity = 'No activity';
+                            if (level === 1) intensity = 'Light coding';
+                            if (level === 2) intensity = 'Moderate coding';
+                            if (level === 3) intensity = 'Active coding';
+                            if (level === 4) intensity = 'Very active coding';
+                            
+                            const tooltipContent = \`📅 \${dateStr} (\${dayNames[dayOfWeek]})
+⏰ Time spent: \${hours}h \${mins}m
+📊 Activity level: \${intensity}\`;
+                            
+                            // Set the data-level on the previous cell if it exists
+                            if (previousCell) {
+                                previousCell.setAttribute('data-level', level.toString());
+                                previousCell.title = tooltipContent;
+                            }
+                            
+                            grid.appendChild(cell);
+                            previousCell = cell; // Store current cell as previous for next iteration
+                        }
+                        
+                        // Don't forget to set the attribute for the last cell
+                        if (previousCell) {
+                            const lastDate = new Date(date.getFullYear(), date.getMonth(), lastDay.getDate());
+                            const lastDateStr = lastDate.toISOString().split('T')[0];
+                            const lastMinutes = data.dailySummary[lastDateStr] || 0;
+                            const lastLevel = getIntensityLevel(lastMinutes);
+                            const lastDayName = ['Saturday','Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'][lastDate.getDay()];
+                            
+                            const lastHours = Math.floor(lastMinutes / 60);
+                            const lastMins = Math.round(lastMinutes % 60);
+                            let lastIntensity = 'No activity';
+                            if (lastLevel === 1) lastIntensity = 'Light coding';
+                            if (lastLevel === 2) lastIntensity = 'Moderate coding';
+                            if (lastLevel === 3) lastIntensity = 'Active coding';
+                            if (lastLevel === 4) lastIntensity = 'Very active coding';
+                            
+                            const lastTooltipContent = \`📅 \${lastDateStr} (\${lastDayName})
+⏰ Time spent: \${lastHours}h \${lastMins}m
+📊 Activity level: \${lastIntensity}\`;
+                            
+                            previousCell.setAttribute('data-level', lastLevel.toString());
+                            previousCell.title = lastTooltipContent;
+                        }
+                        
+                        monthGrid.appendChild(grid);
+
+                        // Add day labels below the grid with Sunday first
+                        const dayLabels = document.createElement('div');
+                        dayLabels.className = 'day-labels';
+                        const days = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
+                        days.forEach(day => {
+                            const label = document.createElement('div');
+                            label.className = 'day-label';
+                            label.textContent = day;
+                            dayLabels.appendChild(label);
+                        });
+                        monthGrid.appendChild(dayLabels);
+                        
+                        return monthGrid;
+                    }
+
+                    function createHeatmap(data) {
+                        const container = document.querySelector('.heatmap-container');
+                        container.innerHTML = '<div class="heatmap-wrapper"><div class="months-container"></div></div>';
+                        
+                        const monthsContainer = container.querySelector('.months-container');
+                        const now = new Date();
+                        
+                        // Create grids for the last 3 months in reverse order (most recent first)
+                        for (let i = 2; i >= 0; i--) {
+                            const monthDate = new Date(now.getFullYear(), now.getMonth() - i, 1);
+                            const monthGrid = createMonthGrid(data, monthDate);
+                            monthsContainer.appendChild(monthGrid);
+                        }
+                        
+                        // Add legend
+                        const legend = document.createElement('div');
+                        legend.className = 'heatmap-legend';
+                        legend.innerHTML = \`
+                            <span>Less</span>
+                            <div class="heatmap-cell" data-level="0"></div>
+                            <div class="heatmap-cell" data-level="1"></div>
+                            <div class="heatmap-cell" data-level="2"></div>
+                            <div class="heatmap-cell" data-level="3"></div>
+                            <div class="heatmap-cell" data-level="4"></div>
+                            <span>More</span>
+                        \`;
+                        container.querySelector('.heatmap-wrapper').appendChild(legend);
+                    }
+
+                    function getIntensityLevel(minutes) {
+                        if (minutes === 0) return 0;
+                        if (minutes < 60) return 1;  // Less than 1 hour
+                        if (minutes < 180) return 2; // 1-3 hours
+                        if (minutes < 360) return 3; // 3-6 hours
+                        return 4; // More than 6 hours
                     }
 
                     // Request a refresh when the webview becomes visible
