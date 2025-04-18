@@ -7,9 +7,59 @@ on:
   workflow_dispatch:  # Allow manual trigger
 
 jobs:
-  publish:
+  verify-changes:
     runs-on: ubuntu-latest
-    environment: VSC EXT  # Specify the environment where the secret is stored
+    outputs:
+      should_publish: ${{ steps.check-changes.outputs.should_publish }}
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Fetch all history for all tags and branches
+          
+      - name: Get changed files
+        id: changed-files
+        run: |
+          echo "files=$(git diff --name-only ${{ github.event.before }} ${{ github.event.after }} | tr '\n' ' ')" >> $GITHUB_OUTPUT
+          
+      - name: Check version change and file types
+        id: check-changes
+        run: |
+          # Check if package.json version changed
+          VERSION_CHANGED=$(git diff ${{ github.event.before }} ${{ github.event.after }} package.json | grep '+\s*"version"')
+          
+          # Get list of changed files
+          CHANGED_FILES="${{ steps.changed-files.outputs.files }}"
+          
+          # Check if only documentation files were changed
+          DOCS_ONLY=true
+          for file in $CHANGED_FILES; do
+            if [[ ! $file =~ \.(md|txt|doc|docx)$ ]] && [[ ! $file =~ ^docs/ ]]; then
+              DOCS_ONLY=false
+              break
+            fi
+          done
+          
+          # Initialize should_publish as false
+          echo "should_publish=false" >> $GITHUB_OUTPUT
+          
+          if [[ "$DOCS_ONLY" == "true" ]]; then
+            echo "ℹ️ Only documentation files were changed"
+            echo "should_publish=false" >> $GITHUB_OUTPUT
+          elif [[ -z "$VERSION_CHANGED" ]]; then
+            echo "❌ Version in package.json was not updated"
+            echo "should_publish=false" >> $GITHUB_OUTPUT
+          else
+            echo "✅ Version changed and non-documentation files modified"
+            echo "should_publish=true" >> $GITHUB_OUTPUT
+          fi
+
+  publish:
+    needs: verify-changes
+    if: needs.verify-changes.outputs.should_publish == 'true'
+    runs-on: ubuntu-latest
+    environment: VSC EXT
     
     steps:
       - name: Checkout code
@@ -33,4 +83,4 @@ jobs:
         run: vsce package
         
       - name: Publish to Visual Studio Marketplace
-        run: vsce publish -p "${{ secrets.VSC_PAT }}" 
+        run: vsce publish -p "${{ secrets.VSC_PAT }}"
