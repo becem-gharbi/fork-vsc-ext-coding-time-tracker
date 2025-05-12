@@ -17,6 +17,15 @@ export function activate(context: vscode.ExtensionContext) {
         })
     );
 
+    // Register configuration change listener
+    context.subscriptions.push(
+        vscode.workspace.onDidChangeConfiguration(e => {
+            if (e.affectsConfiguration('simpleCodingTimeTracker')) {
+                timeTracker.updateConfiguration();
+            }
+        })
+    );
+
     // Register the existing command
     let disposable = vscode.commands.registerCommand('simpleCodingTimeTracker.showSummary', () => {
         summaryView.show();
@@ -50,11 +59,28 @@ export function activate(context: vscode.ExtensionContext) {
         timeTracker.startTracking();
     }
 
+    // Variable to store the focus timeout handle
+    let focusTimeoutHandle: NodeJS.Timeout | null = null;
+
     vscode.window.onDidChangeWindowState((e: vscode.WindowState) => {
         if (e.focused) {
+            if (focusTimeoutHandle) {
+                clearTimeout(focusTimeoutHandle);
+                focusTimeoutHandle = null;
+            }
             timeTracker.startTracking();
         } else {
-            timeTracker.stopTracking();
+            const config = vscode.workspace.getConfiguration('simpleCodingTimeTracker');
+            const focusTimeoutSeconds = config.get('focusTimeout', 60);
+
+            // Only stop tracking after the focus timeout
+            if (focusTimeoutHandle) {
+                clearTimeout(focusTimeoutHandle);
+            }
+            
+            focusTimeoutHandle = setTimeout(() => {
+                timeTracker.stopTracking();
+            }, focusTimeoutSeconds * 1000);
         }
     });
 
