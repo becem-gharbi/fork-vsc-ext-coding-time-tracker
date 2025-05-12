@@ -24,11 +24,15 @@
           "type": "number",
           "default": 5,
           "description": "Interval in seconds to save the current coding session"
-        },
-        "simpleCodingTimeTracker.inactivityTimeout": {
+        },        "simpleCodingTimeTracker.inactivityTimeout": {
           "type": "number",
           "default": 300,
           "description": "Time in seconds of inactivity before tracking stops (default: 300 seconds = 5 minutes)"
+        },
+        "simpleCodingTimeTracker.focusTimeout": {
+          "type": "number",
+          "default": 60,
+          "description": "Time in seconds to continue tracking after VS Code loses focus (default: 60 seconds)"
         }
       }
     },
