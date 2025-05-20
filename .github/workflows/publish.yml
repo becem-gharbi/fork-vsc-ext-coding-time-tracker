@@ -77,7 +77,7 @@ jobs:
         
       - name: Compile
         run: npm run compile
-          - name: Install vsce
+      - name: Install vsce
         run: npm install -g @vscode/vsce
         
       - name: Clean existing VSIX files
