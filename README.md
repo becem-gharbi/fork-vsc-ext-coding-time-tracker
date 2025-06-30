@@ -105,7 +105,7 @@ For technical details about development, release process, and internal architect
 
 ## Changelog
 
-### [0.4.0] - 2025-06-06
+### [0.4.0] - 2025-06-28
 - Added Git branch tracking to monitor time spent on different branches
 - Enhanced project view with branch-specific time tracking
 - Implemented dynamic branch filtering based on selected project
