@@ -2,6 +2,10 @@
 
 This document contains technical details about the Simple Coding Time Tracker VS Code extension, including development setup, release processes, and internal architecture.
 
+## Current Status
+
+**Version**: 0.6.3 | **Marketplaces**: [VS Code](https://marketplace.visualstudio.com/items?itemName=noorashuvo.simple-coding-time-tracker) | [Open VSX](https://open-vsx.org/extension/noorashuvo/simple-coding-time-tracker) | **Website**: [GitHub Pages](https://twentytwo.github.io/vsc-ext-coding-time-tracker/)
+
 ## Development Setup
 
 ### Prerequisites
@@ -13,19 +17,27 @@ This document contains technical details about the Simple Coding Time Tracker VS
 ```
 vsc-ext-coding-time-tracker/
 ├── src/                   # Source code
-│   ├── extension.ts       # Main extension file
-│   ├── statusBar.ts       # Status bar functionality
-│   ├── summaryView.ts     # Summary view implementation
-│   ├── timeTracker.ts     # Time tracking logic
-│   ├── database.ts        # Database operations
-│   └── utils.ts          # Utility functions
-├── scripts/              # Development scripts
-│   └── generate-test-data.js  # Test data generation
-├── .github/workflows/    # GitHub Actions workflows
-│   ├── release.yml      # Release automation
-│   └── publish.yml      # Marketplace publishing
-└── images/              # Documentation images
+│   ├── extension.ts       # Main entry point
+│   ├── timeTracker.ts     # Core tracking logic
+│   ├── database.ts        # Data persistence
+│   ├── summaryView.ts     # Charts & visualization
+│   ├── healthNotifications.ts # Health reminders
+│   └── [other components] # statusBar, settingsView, logger, utils
+├── docs/                  # Website (on site branch)
+├── .github/workflows/     # CI/CD pipelines
+└── package.json          # Extension configuration
 ```
+
+## Branch Management
+
+The repository uses a multi-branch strategy for organized development and deployment:
+
+| Branch | Purpose | Deployment |
+|--------|---------|------------|
+| `main` | Production releases | VS Code Marketplace, Open VSX |
+| `develop` | Beta releases & testing | Pre-release testing |
+| `site` | GitHub Pages website | https://twentytwo.github.io/vsc-ext-coding-time-tracker/ |
+| `stats-data` | Repository statistics | Data storage only |
 
 ## Release Process
 
@@ -117,40 +129,11 @@ The release process is defined in two GitHub Actions workflow files:
 
 ### Core Components
 
-1. **Extension Entry Point (`extension.ts`)**
-   - Activates the extension
-   - Initializes core components
-   - Registers VS Code commands
-   - Handles workspace events
-
-2. **Time Tracker (`timeTracker.ts`)**
-   - Core time tracking logic
-   - Activity detection
-   - Session management
-   - Project identification
-
-3. **Database (`database.ts`)**
-   - Data persistence layer
-   - Time entry storage
-   - Summary data generation
-   - Search functionality
-
-4. **Status Bar (`statusBar.ts`)**
-   - Real-time time display
-   - Activity status indication
-   - Quick access to commands
-   - Tooltip information
-
-5. **Summary View (`summaryView.ts`)**
-   - Interactive data visualization
-   - Chart rendering
-   - Search and filtering
-   - Data export
-
-6. **Utilities (`utils.ts`)**
-   - Time formatting
-   - Data processing
-   - Helper functions
+- **Time Tracker**: Activity detection, inactivity/focus timeouts, Git branch tracking, 50+ language support
+- **Database**: Local storage, CRUD operations, filtering, export
+- **Summary View**: Interactive charts (project, timeline, heatmap, languages), theme-aware
+- **Health Notifications**: Eye rest (20-20-20), stretch, break reminders with snooze
+- **Status Bar**: Real-time display, tooltips, click to open summary
 
 ### Git Branch Tracking
 
@@ -179,24 +162,15 @@ The extension uses the `simple-git` library to monitor git branch changes and as
 4. StatusBar updates in real-time
 5. SummaryView queries the Database for visualization
 
-### Configuration Options
+### Configuration
 
-The extension supports several configuration options in `package.json`:
+**Key Settings:**
+- `inactivityTimeout`: 2.5 min (pause on inactivity)
+- `focusTimeout`: 3 min (continue after focus loss)
+- Health notifications: eye rest (20m), stretch (30m), breaks (90m)
+- `enableDevCommands`: false (test data generation)
 
-```json
-{
-  "simpleCodingTimeTracker.saveInterval": {
-    "type": "number",
-    "default": 5,
-    "description": "Interval in seconds to save the current coding session"
-  },
-  "simpleCodingTimeTracker.inactivityTimeout": {
-    "type": "number",
-    "default": 300,
-    "description": "Time in seconds of inactivity before tracking stops"
-  }
-}
-```
+**Access:** Settings button in summary view OR VS Code settings
 
 ## Contributing
 
@@ -204,148 +178,21 @@ For detailed contribution guidelines, please see [CONTRIBUTING.md](CONTRIBUTING.
 
 ## Testing
 
-### Generate Test Data
+### Dev Commands
+Enable `enableDevCommands` → `SCTT: Generate Test Data (Dev)` creates 90 days of realistic data
 
-The extension includes built-in commands to generate comprehensive test data for development and testing purposes. These commands are hidden from end users by default and only available when explicitly enabled.
+### Manual Testing
+F5 launches Extension Development Host for testing core features
 
-#### Enabling Test Data Commands
+## GitHub Pages Website
 
-**Method 1: Via Settings UI**
-1. Open VS Code Settings (`Ctrl+,`)
-2. Search for `"enableDevCommands"`
-3. Check the box for "Simple Coding Time Tracker › Enable Dev Commands"
+Site: https://twentytwo.github.io/vsc-ext-coding-time-tracker/ (on `site` branch)
+See [WEBSITE.md](WEBSITE.md) for maintenance
 
-**Method 2: Via settings.json**
-```json
-{
-    "simpleCodingTimeTracker.enableDevCommands": true
-}
-```
+## Documentation References
 
-#### Available Test Commands
-
-Once enabled, the following commands become available in the Command Palette (`Ctrl+Shift+P`):
-
-**`SCTT: Generate Test Data (Dev)`**
-- Creates comprehensive test data for the last 90 days
-- Generates 150-200 realistic time entries
-- Includes 10 different projects, 12 Git branches, and 20 programming languages
-- Session durations range from 15 minutes to 3 hours
-- Automatically skips some days to simulate realistic patterns
-
-**`SCTT: Delete Test Data (Dev)`**
-- Safely removes ALL time tracking data with confirmation prompts
-- Requires typing "DELETE ALL DATA" for safety
-- Cannot be undone - use with caution
-
-#### Test Data Structure
-
-Generated test data includes:
-```javascript
-{
-  date: "2025-08-30",           // ISO date string
-  project: "React Dashboard",   // Random project name
-  timeSpent: 120,              // Minutes (15-180 range)
-  branch: "feature/dashboard", // Git branch name
-  language: "typescript"       // Programming language
-}
-```
-
-#### Security Features
-
-- **Hidden by default**: Commands don't appear for end users
-- **Configuration controlled**: Only visible when setting is enabled
-- **Development mode fallback**: Always available in extension development
-- **Clear labeling**: Commands marked with "(Dev)" suffix
-- **Warning messages**: Shows helpful errors if commands are disabled
-
-#### Testing Workflow
-
-1. **Package your extension**: `npm run package`
-2. **Install the package**: `code --install-extension your-package.vsix`
-3. **Enable dev commands**: Set `enableDevCommands` to `true` in settings
-4. **Generate test data**: Use `SCTT: Generate Test Data (Dev)` command
-5. **Test extension features**: Verify charts, filtering, search functionality
-6. **Clean up**: Use `SCTT: Delete Test Data (Dev)` to remove test data
-7. **Disable dev commands**: Set `enableDevCommands` to `false`
-
-This approach ensures test data generation works correctly with packaged extensions while keeping the functionality completely hidden from end users.
-
-### Marketplace Publishing Tests
-
-The extension uses a consolidated workflow with granular control for testing each marketplace individually. You can test publishing to specific marketplaces without affecting production.
-
-#### Test Only Open VSX Registry
-
-```bash
-# Using GitHub CLI
-gh workflow run build-and-publish.yml \
-  --field publish_vscode=false \
-  --field publish_openvsx=true \
-  --field force_publish=true
-
-# Or via GitHub UI:
-# Actions → "Build and Publish Extension" → Run workflow
-# ❌ Uncheck "Publish to VS Code Marketplace" 
-# ✅ Check "Publish to Open VSX Registry"
-# ✅ Check "Force publish" (if no version change)
-```
-
-#### Test Only VS Code Marketplace
-
-```bash
-# Using GitHub CLI
-gh workflow run build-and-publish.yml \
-  --field publish_vscode=true \
-  --field publish_openvsx=false \
-  --field force_publish=true
-
-# Or via GitHub UI:
-# Actions → "Build and Publish Extension" → Run workflow
-# ✅ Check "Publish to VS Code Marketplace"
-# ❌ Uncheck "Publish to Open VSX Registry"  
-# ✅ Check "Force publish" (if no version change)
-```
-
-#### Test Both Marketplaces (Default)
-
-```bash
-# Using GitHub CLI
-gh workflow run build-and-publish.yml \
-  --field publish_vscode=true \
-  --field publish_openvsx=true \
-  --field force_publish=true
-
-# Or via GitHub UI:
-# Actions → "Build and Publish Extension" → Run workflow
-# ✅ Check "Publish to VS Code Marketplace"
-# ✅ Check "Publish to Open VSX Registry"
-# ✅ Check "Force publish" (if testing without version change)
-```
-
-#### Workflow Input Parameters
-
-| Parameter | Description | Default | Use Case |
-|-----------|-------------|---------|----------|
-| `publish_vscode` | Publish to VS Code Marketplace | `true` | Test VS Code publishing |
-| `publish_openvsx` | Publish to Open VSX Registry | `true` | Test Open VSX publishing |
-| `force_publish` | Force publish (ignore version change check) | `false` | Testing without version bump |
-
-#### Testing Notes
-
-- **Force Publish**: Use when testing without bumping the version in `package.json`
-- **Individual Testing**: Disable one marketplace to test the other in isolation
-- **Status Report**: The workflow provides detailed status for each marketplace
-- **Artifacts**: VSIX files are stored as artifacts for 90 days for rollback capability
-
-### Manual Testing Checklist
-
-Before submitting a pull request:
-
-1. Verify time tracking starts/stops correctly
-2. Check status bar updates
-3. Test inactivity detection
-4. Validate data persistence
-5. Check summary view visualizations
-6. Test search and filtering
-7. Verify theme compatibility
+- **Branch Management**: [BRANCHES.md](BRANCHES.md) - Complete branch workflow guide
+- **Website Maintenance**: [WEBSITE.md](WEBSITE.md) - Detailed website documentation
+- **GitHub Pages Setup**: [GITHUB_PAGES_SETUP.md](GITHUB_PAGES_SETUP.md) - Initial deployment guide
+- **Contributing Guidelines**: [CONTRIBUTING.md](CONTRIBUTING.md) - How to contribute to the project
+- **User Documentation**: Available on the [GitHub Pages site](https://twentytwo.github.io/vsc-ext-coding-time-tracker/documentation.html)
