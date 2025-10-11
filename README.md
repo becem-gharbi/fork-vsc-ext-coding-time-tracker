@@ -1,3 +1,5 @@
+🌐 **Website**: [https://twentytwo.github.io/vsc-ext-coding-time-tracker/](https://twentytwo.github.io/vsc-ext-coding-time-tracker/)
+
 **📖 For detailed configuration, advanced features, and complete documentation, see the [Simple Coding Time Tracker Guide](https://github.com/twentyTwo/vsc-ext-coding-time-tracker/wiki) in our wiki.**
 
 📦 **Installation:** [VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=noorashuvo.simple-coding-time-tracker) (VS Code) | [Open VSX Registry](https://open-vsx.org/extension/noorashuvo/simple-coding-time-tracker) (Cursor, Windsurf, Trae, VS Codium etc) 
@@ -261,6 +263,3 @@ For technical details about development, release process, and internal architect
 ## Contributing
 
 For developers interested in contributing to the project, please check out our [CONTRIBUTING.md](CONTRIBUTING.md) file for guidelines and instructions.
-
-
-
